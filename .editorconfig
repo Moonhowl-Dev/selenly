@@ -1,0 +1,23 @@
+# Shared editor settings for the whole repository: https://editorconfig.org
+# VS Code needs the EditorConfig extension; IntelliJ supports it out of the box.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Java and Gradle: 4 spaces, matching palantir-java-format
+[*.{java,kts,gradle}]
+indent_size = 4
+
+# Windows scripts (e.g. gradlew.bat) need CRLF line endings
+[*.{bat,cmd}]
+end_of_line = crlf
+
+# In Markdown, two trailing spaces mean a line break
+[*.md]
+trim_trailing_whitespace = false

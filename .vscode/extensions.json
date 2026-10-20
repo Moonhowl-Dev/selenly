@@ -1,0 +1,12 @@
+{
+  // VS Code offers to install these extensions when the repository is opened.
+  "recommendations": [
+    "ms-vscode-remote.remote-wsl",
+    "editorconfig.editorconfig",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "vitest.explorer",
+    "ms-playwright.playwright"
+  ]
+}
