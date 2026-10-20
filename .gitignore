@@ -4,6 +4,33 @@
 .env.*
 !.env.example
 
+# Claude Code: personal settings stay local (shared ones in .claude/ are committed)
+.claude/settings.local.json
+
+# Java and Gradle (backend)
+.gradle/
+.kotlin/
+build/
+out/
+
+# Node, pnpm and Vite (frontend)
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+
+# Playwright: test output and saved login sessions (these contain cookies)
+test-results/
+playwright-report/
+blob-report/
+**/playwright/.cache/
+**/playwright/.auth/
+
+# Logs
+*.log
+logs/
+
 # OS files
 .DS_Store
 Thumbs.db
