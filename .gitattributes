@@ -8,3 +8,6 @@
 
 # Binary files: Git never changes their content.
 *.jar binary
+
+# Generated code (orval API client): collapsed by default in pull request diffs on GitHub.
+frontend/src/api/** linguist-generated=true
