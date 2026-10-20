@@ -1,0 +1,28 @@
+# Template for %UserProfile%\.wslconfig (e.g. C:\Users\Jan\.wslconfig).
+# This file lives on the Windows side, outside the repository.
+#
+# How to use: in PowerShell run `notepad $env:USERPROFILE\.wslconfig`, paste this content,
+# adjust memory and processors, save. The name must be exactly .wslconfig (no .txt).
+#
+# After every change: quit Docker Desktop, run `wsl --shutdown` in PowerShell,
+# wait about 10 s and open Ubuntu. Check with `nproc` or ./scripts/doctor.sh.
+#
+# Choosing values (the limit covers all of WSL, including Docker Desktop containers):
+#   16 GB RAM -> memory=8GB     32 GB RAM -> memory=16GB     64 GB RAM -> memory=24GB
+#   12 or more logical processors -> processors=8, fewer -> your count minus 2
+#
+# Keep comments on their own lines and ASCII-only: the safest option for the WSL parser.
+
+[wsl2]
+# how much RAM WSL may use (default: 50% of Windows RAM)
+memory=16GB
+# how many logical processors (default: all of them)
+processors=8
+# Windows 11 22H2 or newer only: remove the # from the line below. On Windows 10 leave it as is.
+# networkingMode=mirrored
+
+[experimental]
+# give unused memory back to Windows (also recommended by the Docker documentation)
+autoMemoryReclaim=gradual
+# newly created WSL disks do not grow forever (existing disks are not changed)
+sparseVhd=true

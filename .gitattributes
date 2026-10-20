@@ -1,1 +1,10 @@
+# Default: Git detects text files itself and stores them with LF line endings.
+# This prevents "bad interpreter" errors in scripts (e.g. gradlew) saved on Windows.
 * text=auto eol=lf
+
+# Windows scripts must keep CRLF, otherwise cmd.exe may run them incorrectly.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files: Git never changes their content.
+*.jar binary
