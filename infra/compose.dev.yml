@@ -1,0 +1,70 @@
+# Services for local development. `./gradlew bootRun` in backend/ starts them
+# (spring-boot-docker-compose) and stops them when the application exits.
+#
+# Development only: the passwords below are public on purpose and the ports
+# are bound to 127.0.0.1, so nothing is reachable from your network.
+# Production uses compose.prod.yml with secrets from a .env file on the server.
+#
+# Manual use, from the repository root:
+#   docker compose -f infra/compose.dev.yml up -d    start
+#   docker compose -f infra/compose.dev.yml ps       status and health
+#   docker compose -f infra/compose.dev.yml down -v  remove everything, including the database
+
+# Project name: containers are called selenly-postgres-1 and so on, so they do not
+# clash with other projects on the same Docker.
+name: selenly
+
+services:
+  postgres:
+    image: postgres:18.6
+    environment:
+      POSTGRES_DB: selenly
+      POSTGRES_USER: selenly
+      POSTGRES_PASSWORD: selenly
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # PostgreSQL 18+ images keep data under /var/lib/postgresql/18/docker,
+      # so the volume goes on /var/lib/postgresql (not /var/lib/postgresql/data as in older guides).
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      # -h 127.0.0.1: check over TCP, so the temporary server used during the first
+      # initialization (Unix socket only) is not reported as ready.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    # start-dev: development mode with HTTP and an embedded database.
+    # The realm with test accounts is imported here in M1 (--import-realm).
+    command: ["start-dev"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      # 8180 on your machine, because the backend uses 8080.
+      - "127.0.0.1:8180:8080"
+    healthcheck:
+      # The image has no curl, so this is the bash /dev/tcp check from the Keycloak docs:
+      # https://www.keycloak.org/observability/health (management port 9000).
+      test: ["CMD", "bash", "-c", "{ printf 'HEAD /health/ready HTTP/1.0\\r\\n\\r\\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
+      start_interval: 2s
+
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    # Catches every email the application sends. The image has its own healthcheck.
+    ports:
+      - "127.0.0.1:1025:1025" # SMTP
+      - "127.0.0.1:8025:8025" # web UI
+
+volumes:
+  postgres-data:
