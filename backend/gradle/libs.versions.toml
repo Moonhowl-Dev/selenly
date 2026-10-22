@@ -1,0 +1,15 @@
+# Version catalog: the single place for the versions we choose.
+# https://docs.gradle.org/current/userguide/version_catalogs.html
+#
+# Rule: every version number lives here. Spring starters have no entry, because
+# their versions come from the Spring Boot and Spring Modulith BOMs.
+# Libraries that need an explicit version get a [libraries] entry.
+
+[versions]
+spring-boot = "4.1.1"
+spring-dependency-management = "1.1.7"
+spring-modulith = "2.1.1"
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
