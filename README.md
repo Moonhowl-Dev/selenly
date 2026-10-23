@@ -1,5 +1,7 @@
 # Selenly
 
+[![CI](https://github.com/Moonhowl-Dev/selenly/actions/workflows/ci.yml/badge.svg)](https://github.com/Moonhowl-Dev/selenly/actions/workflows/ci.yml)
+
 Appointment booking for service businesses, starting with a single hair salon. Clients book in three steps, staff manage their calendars, and the owner configures services, prices and schedules.
 
 The first version serves one salon, but the data model is multi-tenant from day one (`business_id` in every business table), so a later stage can host many businesses without rewriting the database.
@@ -76,9 +78,19 @@ Open http://localhost:5173. Details: [backend/README.md](backend/README.md), [fr
 
 ## Contributing
 
-Every change goes through a pull request linked to an issue. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `chore:` and so on). Architecture decisions are recorded in [docs/adr](docs/adr).
+- Every change goes through a pull request linked to an issue (`Closes #12` in the description; the [template](.github/pull_request_template.md) has a place for it).
+- The pull request title follows [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `build:` and so on). Pull requests are squash-merged, so the title becomes the commit message on `main`.
+- Formatting and linting are automatic: a Git hook ([`lefthook.yml`](lefthook.yml)) formats the staged files before every commit.
+- [CI](.github/workflows/ci.yml) runs on every pull request: `./gradlew check` in `backend/` (job **Backend**) and lint, typecheck, tests and build in `frontend/` (job **Frontend**).
+- `main` is protected by the ruleset in [`.github/rulesets/main.json`](.github/rulesets/main.json): no direct pushes or force pushes, and a pull request can be merged only when both CI jobs pass and all review conversations are resolved.
+- Architecture decisions are recorded in [docs/adr](docs/adr).
 
-Formatting and linting are automatic: a Git hook ([`lefthook.yml`](lefthook.yml)) formats the staged files before every commit, and CI runs the same checks (`./gradlew check` in `backend/`, `pnpm lint` in `frontend/`).
+To change the protection, edit the JSON and apply it (repository admins only):
+
+```bash
+id=$(gh api repos/Moonhowl-Dev/selenly/rulesets --jq '.[] | select(.name == "Protect main") | .id')
+gh api --method PUT "repos/Moonhowl-Dev/selenly/rulesets/$id" --input .github/rulesets/main.json
+```
 
 ## License
 
