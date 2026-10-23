@@ -39,6 +39,7 @@ docs/
   adr/          architecture decision records
   onboarding/   development environment setup
 scripts/        environment setup and checks
+CLAUDE.md       rules for AI tools (also backend/ and frontend/)
 ```
 
 ## Getting started
@@ -60,7 +61,7 @@ cd backend && ./gradlew bootRun                # PostgreSQL, Keycloak, Mailpit a
 cd frontend && pnpm install && pnpm dev        # the web app on http://localhost:5173
 ```
 
-Open http://localhost:5173. Details: [backend/README.md](backend/README.md), [frontend/README.md](frontend/README.md), [infra/README.md](infra/README.md).
+Open <http://localhost:5173>. Details: [backend/README.md](backend/README.md), [frontend/README.md](frontend/README.md), [infra/README.md](infra/README.md).
 
 ## Roadmap
 
@@ -82,8 +83,10 @@ Open http://localhost:5173. Details: [backend/README.md](backend/README.md), [fr
 - The pull request title follows [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `build:` and so on). Pull requests are squash-merged, so the title becomes the commit message on `main`.
 - Formatting and linting are automatic: a Git hook ([`lefthook.yml`](lefthook.yml)) formats the staged files before every commit.
 - [CI](.github/workflows/ci.yml) runs on every pull request: `./gradlew check` in `backend/` (job **Backend**) and lint, typecheck, tests and build in `frontend/` (job **Frontend**).
+- [CodeRabbit](https://coderabbit.ai) reviews every pull request ([`.coderabbit.yaml`](.coderabbit.yaml)). Answer each comment with a fix or a reason, then resolve the thread.
 - `main` is protected by the ruleset in [`.github/rulesets/main.json`](.github/rulesets/main.json): no direct pushes or force pushes, and a pull request can be merged only when both CI jobs pass and all review conversations are resolved.
 - Architecture decisions are recorded in [docs/adr](docs/adr).
+- AI tools (Claude Code, CodeRabbit, MCP servers) share the rules in [`CLAUDE.md`](CLAUDE.md). Setup and working agreements: [docs/ai-tools.md](docs/ai-tools.md).
 
 To change the protection, edit the JSON and apply it (repository admins only):
 

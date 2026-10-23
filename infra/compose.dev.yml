@@ -27,6 +27,9 @@ services:
       # PostgreSQL 18+ images keep data under /var/lib/postgresql/18/docker,
       # so the volume goes on /var/lib/postgresql (not /var/lib/postgresql/data as in older guides).
       - postgres-data:/var/lib/postgresql
+      # SQL files run once, when the volume is created: the read-only role for the
+      # agents' database MCP server (see postgres/init/10-readonly-role.sql).
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       # -h 127.0.0.1: check over TCP, so the temporary server used during the first
       # initialization (Unix socket only) is not reported as ready.

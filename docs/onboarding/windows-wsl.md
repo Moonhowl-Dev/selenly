@@ -267,6 +267,7 @@ cd ~/projekty/selenly
 - **IntelliJ IDEA** (backend): open `\\wsl.localhost\Ubuntu\home\<your_name>\projekty\selenly` and point it to the JDK inside WSL (`~/.sdkman/candidates/java/current`). If indexing is slow, use Remote Development to WSL. Install the **palantir-java-format** plugin, so the IDE formats Java exactly like `./gradlew spotlessApply`.
 - **Terminal:** make Ubuntu the default profile (Settings → Startup → Default profile). Every new tab then starts in `~`.
 - **Browser** stays on Windows: `localhost:5173` (Vite) and `localhost:8080` (Spring) work without extra configuration.
+- **Claude Code** (optional): start `claude` in the repository root. The browser and database access for its MCP servers need two one-time steps: [docs/ai-tools.md](../ai-tools.md#setup).
 
 ## Daily habits
 
