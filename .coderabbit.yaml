@@ -1,0 +1,136 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit reviews every pull request. All options:
+# https://docs.coderabbit.ai/reference/configuration
+#
+# CodeRabbit reads this file from the pull request's branch, so a change here
+# already applies to the pull request that makes it.
+#
+# The project rules are not repeated here: CodeRabbit applies every CLAUDE.md
+# (root, backend/, frontend/) as review guidelines, each one to its own folder.
+# This file holds review settings and extra checks for specific paths.
+
+language: en-US
+tone_instructions: >-
+  The author is learning this stack. For every issue, explain in one or two
+  sentences why it matters and how to fix it, and link the official
+  documentation when it helps.
+
+reviews:
+  # assertive: more comments than the default "chill", useful while learning.
+  profile: assertive
+  # Comments only. Merging is controlled by the ruleset in .github/rulesets/main.json
+  # (green CI and resolved review threads), not by a CodeRabbit approval.
+  request_changes_workflow: false
+  high_level_summary: true
+  sequence_diagrams: true
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+  # Generated files are not reviewed. Lock files, build output and binaries
+  # are skipped by default.
+  path_filters:
+    - "!frontend/src/app/routeTree.gen.ts"
+    - "!frontend/src/api/**"
+
+  path_instructions:
+    - path: "backend/src/main/java/**"
+      instructions: |
+        - Flag a module that uses a class from another module's subpackage
+          (for example `booking` importing `staff.internal.*`): only classes in
+          a module's root package are its public API.
+        - Flag JPA relations (`@ManyToOne`, `@OneToMany`, …) to an entity of
+          another module; modules refer to each other's data by UUID.
+        - Flag `Instant.now()`, `LocalDateTime.now()`, `LocalDate.now()` or
+          `ZonedDateTime.now()` called without an injected `Clock`.
+        - Flag `@SuppressWarnings` for NullAway or Error Prone without a comment
+          that explains why the code is safe.
+    - path: "backend/src/main/java/**/web/**"
+      instructions: |
+        - Every endpoint under `/admin` and `/staff` has `@PreAuthorize`.
+        - Request bodies are validated (`@Valid` with Bean Validation constraints).
+        - Responses are DTOs, never JPA entities. Errors are Problem Details (RFC 9457).
+    - path: "backend/src/main/resources/db/migration/**"
+      instructions: |
+        - A migration that already exists on the base branch must not be
+          modified; changes go into a new `V<next number>__<description>.sql`.
+        - New business tables need `business_id uuid NOT NULL REFERENCES business (id)`
+          and an index that starts with `business_id`; keys are
+          `uuid DEFAULT uuidv7()`, time columns `timestamptz`.
+        - Point out statements that lock or rewrite a large table.
+    - path: "backend/src/test/java/**"
+      instructions: |
+        - Tests must be able to fail: flag tests without assertions or with
+          assertions that always pass.
+        - Database tests use Testcontainers (`TestcontainersConfiguration`), never H2.
+        - Time-dependent tests use `Clock.fixed(...)`; flag `Thread.sleep`.
+    - path: "frontend/src/**"
+      instructions: |
+        - Server data only through TanStack Query; flag `fetch` in `useEffect`.
+        - Flag tokens or user data stored in `localStorage` or `sessionStorage`.
+        - Dates are shown in the salon's time zone, not the browser's.
+        - Text shown to users is in Polish. Check it for spelling and a
+          consistent, polite tone.
+        - Tests query by role or label text, not by CSS classes or test IDs.
+    - path: ".github/workflows/**"
+      instructions: |
+        - Every action is pinned to a full commit SHA with the version in a
+          comment; `permissions` are as narrow as possible.
+        - The job names `Backend` and `Frontend` are required status checks in
+          `.github/rulesets/main.json`: renaming one without updating the
+          ruleset blocks every pull request.
+    - path: "infra/**"
+      instructions: |
+        - Development services bind ports to `127.0.0.1` and use pinned image
+          versions; passwords here are public development values, never real ones.
+    - path: "**/*.md"
+      instructions: |
+        - Check that commands, file paths and links match the repository.
+        - Documentation is in English, short and concrete.
+
+  # Checks shown in the walkthrough. "warning" only reports; nothing here blocks merging.
+  pre_merge_checks:
+    # Javadoc and JSDoc are not required on every function.
+    docstrings:
+      mode: "off"
+    title:
+      mode: warning
+      requirements: >-
+        Conventional Commits: `<type>: <description>`, where type is one of
+        feat, fix, docs, test, refactor, perf, build, ci, chore. The description
+        is lowercase and imperative, without a trailing period, and the whole
+        title has at most 72 characters. It becomes the commit message on main.
+    description:
+      mode: warning
+    issue_assessment:
+      mode: warning
+
+  # Linters CodeRabbit runs on the changed files. They are on by default;
+  # listed here so it is clear which ones matter for this project.
+  tools:
+    pmd: # Java
+      enabled: true
+    squawk: # PostgreSQL migrations: locks and unsafe changes
+      enabled: true
+    oasdiff: # breaking changes in the OpenAPI contract (once openapi.json is committed)
+      enabled: true
+    gitleaks: # secrets in the code
+      enabled: true
+    actionlint: # GitHub Actions workflows
+      enabled: true
+    zizmor: # GitHub Actions security
+      enabled: true
+    shellcheck: # scripts/*.sh
+      enabled: true
+
+chat:
+  auto_reply: true
+
+# Guideline files (CLAUDE.md, AGENTS.md, .claude/rules/) are found automatically.
+# Learnings are on by default: when you explain a project convention in a review
+# thread, CodeRabbit saves it and uses it in later reviews.
+knowledge_base:
+  code_guidelines:
+    enabled: true

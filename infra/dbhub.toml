@@ -1,0 +1,27 @@
+# DBHub, the database MCP server for coding agents (the "db" server in .mcp.json).
+# Options: https://dbhub.ai/config/toml
+#
+# It connects as the read-only role from postgres/init/10-readonly-role.sql, so the
+# database itself refuses every change. readonly = true below is a second guard
+# that rejects anything other than reading before it reaches the database.
+
+[[sources]]
+id = "selenly"
+description = "Local development database from compose.dev.yml"
+dsn = "postgres://readonly:readonly@localhost:5432/selenly?sslmode=disable"
+# Connect on the first query, not at startup, so Claude Code starts
+# even when the database is not running yet.
+lazy = true
+
+# With a [[tools]] section only the listed tools exist, so both default tools are listed.
+
+[[tools]]
+name = "search_objects"
+source = "selenly"
+
+[[tools]]
+name = "execute_sql"
+source = "selenly"
+readonly = true
+# Keeps large results from filling the agent's context.
+max_rows = 200

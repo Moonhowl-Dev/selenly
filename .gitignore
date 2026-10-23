@@ -4,8 +4,10 @@
 .env.*
 !.env.example
 
-# Claude Code: personal settings stay local (shared ones in .claude/ are committed)
+# Claude Code: personal settings and instructions stay local
+# (shared ones are committed: CLAUDE.md, .mcp.json, .claude/)
 .claude/settings.local.json
+CLAUDE.local.md
 
 # Java and Gradle (backend)
 .gradle/
@@ -26,6 +28,8 @@ playwright-report/
 blob-report/
 **/playwright/.cache/
 **/playwright/.auth/
+# Playwright MCP: screenshots and page snapshots taken by the coding agent
+.playwright-mcp/
 
 # Logs
 *.log

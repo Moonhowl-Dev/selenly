@@ -5,6 +5,8 @@ Docker Compose files and the configuration of the services the application needs
 | File | Purpose | Status |
 |---|---|---|
 | [`compose.dev.yml`](compose.dev.yml) | PostgreSQL, Keycloak and Mailpit for local development | ready |
+| [`postgres/init/`](postgres/init/) | SQL run when the development database is created: the `readonly` role | ready |
+| [`dbhub.toml`](dbhub.toml) | the database MCP server for coding agents ([docs/ai-tools.md](../docs/ai-tools.md)) | ready |
 | `keycloak/realm.json` | Keycloak realm, OIDC client and test accounts | M1 |
 | `compose.prod.yml` | application, PostgreSQL, Keycloak and Caddy on the server | [#11](https://github.com/Moonhowl-Dev/selenly/issues/11) |
 | `Caddyfile` | HTTPS, the built frontend, `/api` to the backend, `auth.` subdomain to Keycloak | [#11](https://github.com/Moonhowl-Dev/selenly/issues/11) |
@@ -18,8 +20,10 @@ You usually do not start these services yourself: `./gradlew bootRun` in `backen
 | Service | Address on your machine | Login | Used for |
 |---|---|---|---|
 | PostgreSQL 18 | `localhost:5432`, database `selenly` | `selenly` / `selenly` | the application database |
-| Keycloak | http://localhost:8180/admin | `admin` / `admin` | sign-in (from M1) |
-| Mailpit | http://localhost:8025 (SMTP on `localhost:1025`) | none | inbox for every email the application sends |
+| Keycloak | <http://localhost:8180/admin> | `admin` / `admin` | sign-in (from M1) |
+| Mailpit | <http://localhost:8025> (SMTP on `localhost:1025`) | none | inbox for every email the application sends |
+
+PostgreSQL also has a `readonly` / `readonly` login that can read every table and change nothing, for tools such as the agents' database MCP server. It is created by [`postgres/init/10-readonly-role.sql`](postgres/init/10-readonly-role.sql) when the database volume is created; for an older volume, run the command at the top of that file once.
 
 These passwords are for local development only. All ports are bound to `127.0.0.1`, so the services are not reachable from your network.
 
