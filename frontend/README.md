@@ -9,7 +9,7 @@ React single-page app with three areas: public pages, the client area and the st
 | Server state | TanStack Query (no global store) |
 | UI | Tailwind CSS v4 and shadcn/ui |
 | Tests | Vitest and Testing Library |
-| Lint | oxlint |
+| Code quality | ESLint (with jsx-a11y), Prettier |
 
 ## Requirements
 
@@ -27,7 +27,8 @@ Run them in this folder (`frontend/`).
 | `pnpm install` | installs the dependencies from `pnpm-lock.yaml` |
 | `pnpm dev` | starts the dev server on http://localhost:5173 with hot reload |
 | `pnpm typecheck` | type-checks the whole project |
-| `pnpm lint` | runs oxlint |
+| `pnpm lint` | ESLint and a Prettier check (the same as CI) |
+| `pnpm format` | formats all files with Prettier (the Git hook does it for staged files) |
 | `pnpm test` | runs the tests once (`pnpm test:watch` keeps them running) |
 | `pnpm build` | type-checks and builds the production version into `dist/` |
 | `pnpm preview` | serves the built `dist/` locally |
@@ -79,13 +80,20 @@ pnpm dlx shadcn@latest add dialog
 
 Style with Tailwind classes and the theme colors (`bg-background`, `text-muted-foreground`, …) instead of fixed colors, so the whole app follows one theme.
 
+## Code quality
+
+- **Formatting:** [Prettier](https://prettier.io), including the order of Tailwind classes. Install the Prettier extension and turn on "format on save", or let the Git hook do it.
+- **Linting:** [ESLint](https://eslint.org) in [`eslint.config.js`](eslint.config.js): TypeScript rules that know the types (e.g. a forgotten `await`), React hooks rules, TanStack Query and Router rules, and accessibility rules from [jsx-a11y](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y) (strict). An `<img>` without `alt` or a clickable `<div>` fails `pnpm lint` and blocks the commit.
+- Generated files are skipped by both: `src/app/routeTree.gen.ts` and later `src/api`.
+
 ## Tests
 
 Test files sit next to the code they test (`*.test.tsx`). [`src/app/App.test.tsx`](src/app/App.test.tsx) shows how to render the whole app at a given address.
 
 ## pnpm and supply-chain safety
 
-- pnpm does not run install scripts of dependencies and checks new versions against its supply-chain rules.
+- pnpm does not run install scripts of dependencies and checks new versions against its supply-chain rules. Exceptions are listed in [`pnpm-workspace.yaml`](pnpm-workspace.yaml): for example, lefthook's install script stays off, and the hooks are installed by our own `prepare` script instead.
+- ESLint 10 is used with jsx-a11y 6.10.2, whose package still declares ESLint 9 at most. It works with 10 (it uses no removed APIs), so `pnpm-workspace.yaml` allows it explicitly.
 - Some packages ship "agent skills" for AI coding agents. [`pnpm-workspace.yaml`](pnpm-workspace.yaml) declines them; the project's own skills live in `.claude/skills`. If pnpm reports "Agent skills awaiting approval" for a new package, decline it the same way (`pnpm approve '!<package>'`) unless the team decided otherwise.
 
 ## Troubleshooting

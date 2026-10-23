@@ -20,7 +20,7 @@ For people who already know WSL. Every step is described in detail below.
 5. Repository and check:
    ```bash
    gh repo clone Moonhowl-Dev/selenly ~/projekty/selenly
-   cd ~/projekty/selenly && ./scripts/doctor.sh
+   cd ~/projekty/selenly && (cd frontend && pnpm install) && ./scripts/doctor.sh
    ```
 
 ## Before you start: reading the commands
@@ -253,15 +253,18 @@ Type `yes` only if it matches. A correct reply contains `Hi <login>! You've succ
 mkdir -p ~/projekty
 gh repo clone Moonhowl-Dev/selenly ~/projekty/selenly
 cd ~/projekty/selenly
+(cd frontend && pnpm install)
 ./scripts/doctor.sh
 ```
+
+`pnpm install` in `frontend/` also installs the Git hooks ([lefthook](../../lefthook.yml)): before every commit, the staged files are formatted and auto-fixed.
 
 [`scripts/doctor.sh`](../../scripts/doctor.sh) changes nothing: it only checks the environment and suggests a fix for every problem. Everything should be ✅. Items marked ⚠️ are worth a look; items marked ❌ must be fixed. If you get stuck, paste the output to whoever is helping you.
 
 ## 7. Editors
 
-- **VS Code** (frontend): install the **WSL** extension on Windows, then run `code .` in Ubuntu inside the repository folder. VS Code will offer the extensions from [`.vscode/extensions.json`](../../.vscode/extensions.json); they install on the WSL side.
-- **IntelliJ IDEA** (backend): open `\\wsl.localhost\Ubuntu\home\<your_name>\projekty\selenly` and point it to the JDK inside WSL (`~/.sdkman/candidates/java/current`). If indexing is slow, use Remote Development to WSL.
+- **VS Code** (frontend): install the **WSL** extension on Windows, then run `code .` in Ubuntu inside the repository folder. VS Code will offer the extensions from [`.vscode/extensions.json`](../../.vscode/extensions.json), including ESLint and Prettier; they install on the WSL side.
+- **IntelliJ IDEA** (backend): open `\\wsl.localhost\Ubuntu\home\<your_name>\projekty\selenly` and point it to the JDK inside WSL (`~/.sdkman/candidates/java/current`). If indexing is slow, use Remote Development to WSL. Install the **palantir-java-format** plugin, so the IDE formats Java exactly like `./gradlew spotlessApply`.
 - **Terminal:** make Ubuntu the default profile (Settings → Startup → Default profile). Every new tab then starts in `~`.
 - **Browser** stays on Windows: `localhost:5173` (Vite) and `localhost:8080` (Spring) work without extra configuration.
 

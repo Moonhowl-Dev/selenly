@@ -131,6 +131,16 @@ if has git; then
       "In WSL turn it off: git config --global core.autocrlf false. Line endings are handled by .gitattributes."
   fi
 
+  if [[ -f "$REPO_ROOT/lefthook.yml" ]]; then
+    hooks_dir="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-path hooks 2>/dev/null)"
+    if grep -qs lefthook "$hooks_dir/pre-commit"; then
+      pass "Git hooks installed (lefthook): formatting runs before every commit"
+    else
+      warn "Git hooks are not installed: commits will not be formatted automatically" \
+        "cd frontend && pnpm install (it runs lefthook install), or: cd frontend && pnpm exec lefthook install"
+    fi
+  fi
+
   if git -C "$REPO_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     # Files whose working copy has CRLF although it should be LF (.bat and .cmd are skipped).
     crlf_files="$(git -C "$REPO_ROOT" ls-files --eol 2>/dev/null |

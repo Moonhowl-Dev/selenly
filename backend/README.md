@@ -16,6 +16,7 @@ Run them in this folder (`backend/`).
 | Command | What it does |
 |---|---|
 | `./gradlew check` | builds the code and runs all checks and tests (the same as CI); needs a running Docker |
+| `./gradlew spotlessApply` | formats all Java code (the Git hook does it for staged files) |
 | `./gradlew test --tests 'dev.moonhowl.selenly.ModularityTests'` | runs a single test class |
 | `./gradlew bootRun` | starts PostgreSQL, Keycloak and Mailpit in Docker, then the application on http://localhost:8080 |
 
@@ -60,8 +61,34 @@ None of them exist yet; each is added in the milestone that needs it.
 
 [`ModularityTests`](src/test/java/dev/moonhowl/selenly/ModularityTests.java) calls `ApplicationModules.verify()` and fails the build when a module uses another module's private classes or when modules depend on each other in a cycle.
 
+## Code quality
+
+All of it runs in `./gradlew check`, so CI enforces it.
+
+- **Formatting:** [Spotless](https://github.com/diffplug/spotless) with [palantir-java-format](https://github.com/palantir/palantir-java-format). Do not format by hand: `./gradlew spotlessApply`, the Git hook, or the palantir-java-format plugin in IntelliJ.
+- **Bug patterns:** [Error Prone](https://errorprone.info) runs inside the compiler and turns common mistakes into compile errors.
+- **Null safety:** [NullAway](https://github.com/uber/NullAway) in [JSpecify](https://jspecify.dev) mode. In every package under `dev.moonhowl.selenly`, a type is non-null unless it is annotated `@Nullable` (`org.jspecify.annotations.Nullable`):
+
+  ```java
+  // Compile error: the method may return null, but its type says it never does.
+  String findName(UUID id) { return names.get(id); }
+
+  // OK: the caller has to handle null.
+  @Nullable String findName(UUID id) { return names.get(id); }
+  ```
+
+  Every new package gets a `package-info.java` with `@NullMarked` (see [the root one](src/main/java/dev/moonhowl/selenly/package-info.java)), so IntelliJ shows the same warnings as the build. NullAway is off for test code.
+
 ## Dependencies and versions
 
 - Versions live in the version catalog: [`gradle/libs.versions.toml`](gradle/libs.versions.toml).
 - Spring starters are declared without versions in [`build.gradle.kts`](build.gradle.kts): the Spring Boot and Spring Modulith BOMs choose matching versions.
 - Do not add a dependency without discussing it first (in the issue or the pull request).
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `spotlessJavaCheck` fails in `./gradlew check` | run `./gradlew spotlessApply` and commit the result |
+| Spotless fails with `IllegalAccessError` mentioning `com.sun.tools.javac` | add to `backend/gradle.properties`: `org.gradle.jvmargs=-Xmx1g --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED`, then `./gradlew --stop` |
+| NullAway reports a false positive | prefer making the code clearer; if it is really safe, explain it in a comment and use `@SuppressWarnings("NullAway")` on the smallest possible scope |

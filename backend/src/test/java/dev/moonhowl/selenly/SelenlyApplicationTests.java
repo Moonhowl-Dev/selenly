@@ -13,6 +13,5 @@ class SelenlyApplicationTests {
      * Flyway applies every migration on startup, so a broken migration fails this test.
      */
     @Test
-    void contextLoads() {
-    }
+    void contextLoads() {}
 }
