@@ -79,7 +79,13 @@ The `db` server connects as the `readonly` role, which can read every table and 
 
 ### Why `pnpm dlx` and exact versions
 
-`pnpm dlx` downloads a package and runs it, like `npx`. The difference is the dependencies of that package: pnpm skips versions published less than a day ago and does not run their install scripts, the same rules as for the frontend. A compromised package on npm is often discovered and removed within hours, so a day of delay protects against many of these attacks. The exact versions (`@1.5.0`, not `@latest`) mean everyone runs the same code until someone deliberately updates it.
+`pnpm dlx` downloads a package and runs it, like `npx`, but with the supply-chain rules pnpm also applies to the frontend:
+
+- It skips versions published less than a day ago, both for the package and for all its dependencies. A compromised package on npm is often discovered and removed within hours, so a day of delay protects against many of these attacks.
+- Install scripts of the dependencies do not run. Without a terminal to approve them, which is how Claude Code starts the servers, they stay skipped.
+- The package that `pnpm dlx` runs is an exception: its own install script is allowed by default. Running the package executes its code anyway, so for the package itself the protection is the exact, checked version. The versions in `.mcp.json` have no install scripts; before raising one, check with `npm view <package>@<version> scripts` (look for `preinstall`, `install` or `postinstall`).
+
+The exact versions (`@1.5.0`, not `@latest`) mean everyone runs the same code until someone deliberately updates it.
 
 ### Personal servers and overrides
 
