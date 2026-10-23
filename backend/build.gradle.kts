@@ -1,3 +1,4 @@
+import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -5,6 +6,8 @@ plugins {
     java
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.errorprone)
 }
 
 group = "dev.moonhowl"
@@ -34,6 +37,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
+    // Null-safety annotations (@NullMarked, @Nullable), the same ones Spring uses.
+    implementation("org.jspecify:jspecify")
     runtimeOnly("org.postgresql:postgresql")
 
     // Starts infra/compose.dev.yml on bootRun. developmentOnly: not in tests, not in the production image.
@@ -44,6 +49,36 @@ dependencies {
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testImplementation("org.testcontainers:testcontainers-postgresql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Compiler plugins: they check the code while it compiles and are not part of the application.
+    errorprone(libs.error.prone.core)
+    errorprone(libs.nullaway)
+}
+
+// Formatting: `./gradlew spotlessApply` fixes it, `./gradlew check` fails when it is wrong.
+spotless {
+    java {
+        palantirJavaFormat(libs.versions.palantir.java.format.get())
+    }
+}
+
+// Error Prone finds common bugs at compile time; NullAway adds null safety on top of it.
+tasks.withType<JavaCompile>().configureEach {
+    options.errorprone {
+        disableWarningsInGeneratedCode = true
+        // Every type in our packages is non-null unless annotated @Nullable (JSpecify).
+        // A possible NullPointerException is a compile error, not a crash in production.
+        error("NullAway")
+        option("NullAway:AnnotatedPackages", "dev.moonhowl.selenly")
+        option("NullAway:JSpecifyMode", "true")
+        option("NullAway:CustomContractAnnotations", "org.springframework.lang.Contract")
+    }
+}
+
+tasks.named<JavaCompile>("compileTestJava") {
+    // Tests set fields in @BeforeEach and use mocks: null checks there add noise, not safety.
+    // The other Error Prone checks still run on test code.
+    options.errorprone.disable("NullAway")
 }
 
 tasks.withType<Test> {

@@ -78,6 +78,8 @@ Open http://localhost:5173. Details: [backend/README.md](backend/README.md), [fr
 
 Every change goes through a pull request linked to an issue. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `chore:` and so on). Architecture decisions are recorded in [docs/adr](docs/adr).
 
+Formatting and linting are automatic: a Git hook ([`lefthook.yml`](lefthook.yml)) formats the staged files before every commit, and CI runs the same checks (`./gradlew check` in `backend/`, `pnpm lint` in `frontend/`).
+
 ## License
 
 [MIT](LICENSE)

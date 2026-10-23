@@ -1,0 +1,30 @@
+# Git hooks managed by lefthook: https://lefthook.dev
+# Installed by `pnpm install` in frontend/ (the "prepare" script runs `lefthook install`).
+#
+# Before every commit the staged files are formatted and fixed, and the fixes are
+# added to the same commit. CI runs the same checks, so skipping the hook
+# (git commit --no-verify) only moves the failure to the pull request.
+
+pre-commit:
+  jobs:
+    - name: frontend
+      root: frontend/
+      group:
+        # One after another: both tools may rewrite the same file.
+        piped: true
+        jobs:
+          - name: prettier
+            glob: "*.{ts,tsx,js,json,css,html,yml,yaml}"
+            run: pnpm exec prettier --write --ignore-unknown {staged_files}
+            stage_fixed: true
+          - name: eslint
+            glob: "*.{ts,tsx}"
+            run: pnpm exec eslint --fix {staged_files}
+            stage_fixed: true
+
+    - name: backend
+      root: backend/
+      glob: "*.java"
+      # Formats all Java files; stage_fixed re-adds only the files that were staged.
+      run: ./gradlew spotlessApply --quiet
+      stage_fixed: true

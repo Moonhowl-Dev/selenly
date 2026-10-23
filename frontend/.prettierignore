@@ -1,0 +1,9 @@
+# Generated files and build output: never reformat them.
+dist
+coverage
+pnpm-lock.yaml
+src/app/routeTree.gen.ts
+src/api
+
+# Markdown is left as written, like the documentation in the rest of the repository.
+*.md

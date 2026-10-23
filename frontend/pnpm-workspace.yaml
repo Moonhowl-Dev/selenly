@@ -1,8 +1,16 @@
 # pnpm settings for the frontend.
 #
-# Some packages ship "agent skills" (instructions for AI coding agents) that pnpm
-# could install into the project. We do not accept them from dependencies:
-# the project's own skills live in .claude/skills and are reviewed like code.
+# Dependencies may not run install scripts or install "agent skills" (instructions for
+# AI coding agents) unless listed here. The project's own skills live in .claude/skills
+# and are reviewed like code; git hooks are installed by `pnpm prepare` (lefthook install).
 permissions:
   '@tanstack/router-plugin':
     skills: false
+  lefthook:
+    build: false
+
+peerDependencyRules:
+  allowedVersions:
+    # eslint-plugin-jsx-a11y 6.10.2 (the latest release) declares ESLint up to 9, but works
+    # with ESLint 10: it uses none of the APIs removed in 10. Remove this when it declares 10.
+    eslint-plugin-jsx-a11y>eslint: '10'
