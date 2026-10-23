@@ -30,13 +30,19 @@ dependencyManagement {
 dependencies {
     // No versions here: they come from the Spring Boot and Spring Modulith BOMs.
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
+    implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
+    runtimeOnly("org.postgresql:postgresql")
 
     // Starts infra/compose.dev.yml on bootRun. developmentOnly: not in tests, not in the production image.
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
+    testImplementation("org.testcontainers:testcontainers-postgresql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
