@@ -103,4 +103,4 @@ Test files sit next to the code they test (`*.test.tsx`). [`src/app/App.test.tsx
 | The Windows browser cannot open http://localhost:5173 | start with `pnpm dev --host` (WSL then listens on all its interfaces) |
 | `Port 5173 is already in use` | another `pnpm dev` is still running: close it, or find it with `ss -ltnp \| grep 5173` |
 | Requests to `/api` fail with `ECONNREFUSED` in the terminal | the backend is not running: `cd backend && ./gradlew bootRun` |
-| A new route does not exist in `<Link to>` types | run `pnpm dev` (or `pnpm build`) once to regenerate `routeTree.gen.ts` |
+| `Argument of type '"/about"' is not assignable to parameter of type '"/"'` (or a new route missing in `<Link to>`) | `routeTree.gen.ts` is out of date: run `pnpm dev` once, then commit the regenerated file |
