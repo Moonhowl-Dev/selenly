@@ -1,0 +1,8 @@
+# pnpm settings for the frontend.
+#
+# Some packages ship "agent skills" (instructions for AI coding agents) that pnpm
+# could install into the project. We do not accept them from dependencies:
+# the project's own skills live in .claude/skills and are reviewed like code.
+permissions:
+  '@tanstack/router-plugin':
+    skills: false

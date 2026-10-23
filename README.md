@@ -41,9 +41,7 @@ scripts/        environment setup and checks
 
 ## Getting started
 
-The application cannot be started yet. The goal of milestone M0 is that `git clone` and one command start the backend, the frontend and the database.
-
-Until then, set up your development environment:
+First set up your development environment:
 
 | What | Where |
 |---|---|
@@ -52,6 +50,15 @@ Until then, set up your development environment:
 | Check your environment | `./scripts/doctor.sh` |
 
 Tool versions are pinned in the repository: Java in [`.sdkmanrc`](.sdkmanrc), Node in [`.node-version`](.node-version).
+
+Then start the application in two terminals (Docker must be running):
+
+```bash
+cd backend && ./gradlew bootRun                # PostgreSQL, Keycloak, Mailpit and the API on :8080
+cd frontend && pnpm install && pnpm dev        # the web app on http://localhost:5173
+```
+
+Open http://localhost:5173. Details: [backend/README.md](backend/README.md), [frontend/README.md](frontend/README.md), [infra/README.md](infra/README.md).
 
 ## Roadmap
 

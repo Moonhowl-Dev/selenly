@@ -9,5 +9,7 @@
 # Binary files: Git never changes their content.
 *.jar binary
 
-# Generated code (orval API client): collapsed by default in pull request diffs on GitHub.
+# Generated code, collapsed by default in pull request diffs on GitHub:
+# the orval API client and the TanStack Router route tree.
 frontend/src/api/** linguist-generated=true
+frontend/src/app/routeTree.gen.ts linguist-generated=true
