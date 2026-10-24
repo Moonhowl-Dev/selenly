@@ -1,6 +1,7 @@
 import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
 
 plugins {
     java
@@ -88,4 +89,16 @@ tasks.withType<Test> {
         events(TestLogEvent.FAILED, TestLogEvent.SKIPPED)
         exceptionFormat = TestExceptionFormat.FULL
     }
+}
+
+// The container image (./gradlew bootBuildImage, used by ./scripts/prod-local.sh and CI).
+tasks.named<BootBuildImage>("bootBuildImage") {
+    // A fixed builder version instead of the plugin's default ":latest", so every build uses
+    // the same buildpacks and JRE until Renovate proposes a newer one (3 days after release).
+    // ":latest" broke on 2026-10-23, when it pointed to an arm64-only image:
+    // https://github.com/paketo-buildpacks/builder-noble-java-tiny/issues/344
+    builder.set("docker.io/paketobuildpacks/builder-noble-java-tiny:0.0.200")
+    // Build for x86 servers (amd64), whatever the machine runs.
+    // For an ARM server (e.g. Oracle Ampere), change this to "linux/arm64".
+    imagePlatform.set("linux/amd64")
 }

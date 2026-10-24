@@ -113,6 +113,13 @@
     },
     {
       customType: 'regex',
+      description: 'The buildpacks builder image of bootBuildImage in backend/build.gradle.kts',
+      managerFilePatterns: ['/^backend/build\\.gradle\\.kts$/'],
+      matchStrings: ['builder\\.set\\("(?<depName>[a-z0-9./-]+):(?<currentValue>[^"@]+)"\\)'],
+      datasourceTemplate: 'docker',
+    },
+    {
+      customType: 'regex',
       description: 'Docker images of Testcontainers in backend tests',
       managerFilePatterns: ['/^backend/src/test/java/.+\\.java$/'],
       matchStrings: ['DockerImageName\\.parse\\("(?<depName>[a-z0-9./-]+):(?<currentValue>[^"@]+)"\\)'],
