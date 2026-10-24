@@ -1,0 +1,115 @@
+# The production stack: Caddy (HTTPS and the built frontend), the Spring Boot backend,
+# Keycloak and PostgreSQL. Only Caddy is reachable from outside, on ports 80 and 443;
+# the other services talk to each other on the internal Compose network.
+#
+# Variables like ${POSTGRES_PASSWORD} come from infra/.env on the server (copy
+# .env.example, never commit .env). To try the whole stack on your own computer,
+# run ./scripts/prod-local.sh (see infra/README.md).
+#
+# Memory limits add up to about 2.9 GB, so the stack fits a server with 4 GB of RAM
+# and leaves the rest to the system. ./scripts/prod-local.sh uses the same limits.
+
+name: selenly-prod
+
+services:
+  web:
+    # Caddy with the built frontend and the Caddyfile inside (web.Dockerfile).
+    image: ${WEB_IMAGE:-ghcr.io/moonhowl-dev/selenly-web:latest}
+    restart: unless-stopped
+    environment:
+      SELENLY_DOMAIN: ${SELENLY_DOMAIN:?set SELENLY_DOMAIN in infra/.env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    volumes:
+      # Certificates and Caddy's state. Keep this volume: without it Caddy requests
+      # new certificates on every start and soon hits Let's Encrypt's rate limits.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      backend:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+    mem_limit: 128m
+
+  backend:
+    # Built by `./gradlew bootBuildImage` (Cloud Native Buildpacks, no Dockerfile).
+    image: ${BACKEND_IMAGE:-ghcr.io/moonhowl-dev/selenly-backend:latest}
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/selenly
+      SPRING_DATASOURCE_USERNAME: selenly
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in infra/.env}
+      # Caddy terminates HTTPS. Trust its X-Forwarded-* headers, so redirects and
+      # links built by Spring use https:// and the public host name.
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      # Fewer reserved thread stacks leave more of the memory limit for the heap
+      # (the buildpack's memory calculator sizes the JVM from mem_limit).
+      BPL_JVM_THREAD_COUNT: "50"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 1g
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    restart: unless-stopped
+    # Production mode: HTTPS is required for users, which Caddy provides in front.
+    command: ["start"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD in infra/.env}
+      # The public address. Keycloak puts it into tokens and redirects.
+      KC_HOSTNAME: https://auth.${SELENLY_DOMAIN}
+      # Plain HTTP inside the Compose network; Caddy adds HTTPS and these headers.
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      # The first admin account, created on the first start only.
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in infra/.env}
+    healthcheck:
+      # The same check as in compose.dev.yml: /health/ready on the management port 9000.
+      test: ["CMD", "bash", "-c", "{ printf 'HEAD /health/ready HTTP/1.0\\r\\n\\r\\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 120s
+      start_interval: 2s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Keycloak sizes its heap as a share of this limit and needs more than the backend.
+    mem_limit: 1280m
+
+  postgres:
+    image: postgres:18.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: selenly
+      POSTGRES_USER: selenly
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in infra/.env}
+      # Read by postgres/prod-init/10-keycloak-db.sh.
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD in infra/.env}
+    volumes:
+      # PostgreSQL 18+ keeps its data under /var/lib/postgresql/18/docker.
+      - postgres-data:/var/lib/postgresql
+      # Runs once, when the volume is created: a separate database and login for Keycloak.
+      - ./postgres/prod-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+    mem_limit: 512m
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

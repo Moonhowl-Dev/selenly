@@ -1,0 +1,22 @@
+# Changes to compose.prod.yml for trying the production stack on your own computer.
+# Used by ./scripts/prod-local.sh together with prod-local.env; never on a server.
+
+# A separate project, so it never touches the containers or data of compose.dev.yml.
+name: selenly-prod-local
+
+services:
+  web:
+    # Build the web image from your working copy instead of pulling it from GHCR.
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+    # Only this computer can open the site, not other devices on your network.
+    ports: !override
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+      - "127.0.0.1:443:443/udp"
+
+  backend:
+    # Built by `./gradlew bootBuildImage` in the script; fail clearly if it is missing
+    # instead of trying to download selenly-backend:local from a registry.
+    pull_policy: never

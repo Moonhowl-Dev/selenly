@@ -1,0 +1,41 @@
+# Caddy: HTTPS, the built frontend, and the way to the backend and Keycloak.
+# Docs: https://caddyserver.com/docs/caddyfile
+#
+# {$SELENLY_DOMAIN} comes from the environment of the web service (compose.prod.yml).
+# For a public domain, Caddy gets certificates from Let's Encrypt by itself.
+# For selenly.localhost (./scripts/prod-local.sh), it issues them from its own
+# local certificate authority, so the same file works on your computer.
+
+{$SELENLY_DOMAIN} {
+	encode zstd gzip
+	root * /srv
+
+	# The REST API and the sign-in flow go to Spring Boot: the same paths as the
+	# Vite proxy in development (frontend/vite.config.ts).
+	@backend path /api/* /oauth2/* /login /login/* /logout
+	handle @backend {
+		reverse_proxy backend:8080
+	}
+
+	# Built JavaScript and CSS. Their names contain a content hash and never
+	# change, so browsers may keep them for a year. A missing file is a 404,
+	# never index.html.
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# Everything else is the React app. Unknown paths get index.html, so that
+	# TanStack Router shows the right page (or its "not found" page).
+	# index.html is never cached: it points to the current asset files.
+	handle {
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Keycloak: sign-in pages, the admin console and the OpenID Connect endpoints.
+auth.{$SELENLY_DOMAIN} {
+	reverse_proxy keycloak:8080
+}
