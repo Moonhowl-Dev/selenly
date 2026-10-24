@@ -14,7 +14,9 @@ name: selenly-prod
 services:
   web:
     # Caddy with the built frontend and the Caddyfile inside (web.Dockerfile).
-    image: ${WEB_IMAGE:-ghcr.io/moonhowl-dev/selenly-web:latest}
+    # IMAGE_TAG picks the version of both our images. It has no default: the server
+    # runs exactly the tag written in infra/.env, never whatever "latest" is today.
+    image: ghcr.io/moonhowl-dev/selenly-web:${IMAGE_TAG:?set IMAGE_TAG in infra/.env}
     restart: unless-stopped
     environment:
       SELENLY_DOMAIN: ${SELENLY_DOMAIN:?set SELENLY_DOMAIN in infra/.env}
@@ -28,6 +30,9 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
+      # The backend has no health check yet (it comes with Spring Boot Actuator).
+      # Until it accepts connections, Caddy holds requests for up to 30 s instead
+      # of answering 502 (lb_try_duration in the Caddyfile).
       backend:
         condition: service_started
       keycloak:
@@ -36,7 +41,7 @@ services:
 
   backend:
     # Built by `./gradlew bootBuildImage` (Cloud Native Buildpacks, no Dockerfile).
-    image: ${BACKEND_IMAGE:-ghcr.io/moonhowl-dev/selenly-backend:latest}
+    image: ghcr.io/moonhowl-dev/selenly-backend:${IMAGE_TAG:?set IMAGE_TAG in infra/.env}
     restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/selenly

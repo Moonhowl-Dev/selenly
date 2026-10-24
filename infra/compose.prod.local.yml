@@ -18,5 +18,5 @@ services:
 
   backend:
     # Built by `./gradlew bootBuildImage` in the script; fail clearly if it is missing
-    # instead of trying to download selenly-backend:local from a registry.
+    # instead of trying to download the :local image from GHCR.
     pull_policy: never

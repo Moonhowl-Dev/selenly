@@ -38,11 +38,6 @@
 
   packageRules: [
     {
-      description: 'Our own images (selenly-web, selenly-backend in compose.prod.yml) are built by CI, not dependencies.',
-      matchPackageNames: ['ghcr.io/moonhowl-dev/**'],
-      enabled: false,
-    },
-    {
       description: 'Supply-chain safety: suggest a release only when it is 3 days old. Malicious versions are often found and removed by then, and npm allows unpublishing for 72 hours. For indirect dependencies, pnpm applies its own 1-day rule (minimumReleaseAge in frontend/pnpm-workspace.yaml).',
       matchUpdateTypes: ['major', 'minor', 'patch', 'digest'],
       minimumReleaseAge: '3 days',

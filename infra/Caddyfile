@@ -14,7 +14,11 @@
 	# Vite proxy in development (frontend/vite.config.ts).
 	@backend path /api/* /oauth2/* /login /login/* /logout
 	handle @backend {
-		reverse_proxy backend:8080
+		reverse_proxy backend:8080 {
+			# While the backend starts or restarts, wait for it for up to 30 s
+			# instead of answering 502 at once.
+			lb_try_duration 30s
+		}
 	}
 
 	# Built JavaScript and CSS. Their names contain a content hash and never
@@ -37,5 +41,7 @@
 
 # Keycloak: sign-in pages, the admin console and the OpenID Connect endpoints.
 auth.{$SELENLY_DOMAIN} {
-	reverse_proxy keycloak:8080
+	reverse_proxy keycloak:8080 {
+		lb_try_duration 30s
+	}
 }

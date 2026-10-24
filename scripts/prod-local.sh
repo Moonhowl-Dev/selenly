@@ -22,7 +22,7 @@ compose() {
 case "${1:-up}" in
   up)
     echo "==> Backend image (the first build downloads the buildpacks, several hundred MB)"
-    (cd backend && ./gradlew bootBuildImage --imageName=selenly-backend:local)
+    (cd backend && ./gradlew bootBuildImage --imageName=ghcr.io/moonhowl-dev/selenly-backend:local)
 
     echo "==> Frontend build"
     (cd frontend && pnpm install --frozen-lockfile && pnpm build)
