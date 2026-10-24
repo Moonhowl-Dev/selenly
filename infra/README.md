@@ -89,7 +89,20 @@ Browsers send every `*.localhost` name to your own computer, and Caddy gives suc
 
 The local stack is a separate Compose project (`selenly-prod-local`), so it can run next to `compose.dev.yml` without touching its data. Its passwords in [`prod-local.env`](prod-local.env) are public development values.
 
-On a server the stack uses `compose.prod.yml` alone, with the images from GitHub Container Registry and an `infra/.env` made from [`.env.example`](.env.example) (#10, #12).
+On a server the stack uses `compose.prod.yml` alone, with an `infra/.env` made from [`.env.example`](.env.example) and the images that CI publishes (#10).
+
+### Published images
+
+After every merge to `main` and every Monday, the **Images** job of [CI](../.github/workflows/ci.yml) builds both images from `main` and pushes them to GitHub Container Registry:
+
+| Image | Built with |
+|---|---|
+| `ghcr.io/moonhowl-dev/selenly-backend` | `./gradlew bootBuildImage` in `backend/` |
+| `ghcr.io/moonhowl-dev/selenly-web` | `pnpm build` in `frontend/`, then [`web.Dockerfile`](web.Dockerfile) |
+
+Both get the same tag, made of the build date and the commit: `20261024-ecf1eaa`. The tag is `IMAGE_TAG` in `infra/.env`; the job's summary on the Actions tab shows it after each run. A weekly rebuild of the same commit gets a new tag, so a tag always points to the same image, and an older tag is a ready rollback.
+
+New packages on GitHub are private. Once, after the first run, make both public so a server can pull them without a token: **Packages** on the organization page → the package → **Package settings** → **Change visibility** → **Public**.
 
 ## Troubleshooting
 

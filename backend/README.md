@@ -18,13 +18,14 @@ Run them in this folder (`backend/`).
 | `./gradlew check` | builds the code and runs all checks and tests (the same as CI); needs a running Docker |
 | `./gradlew spotlessApply` | formats all Java code (the Git hook does it for staged files) |
 | `./gradlew test --tests 'dev.moonhowl.selenly.ModularityTests'` | runs a single test class |
-| `./gradlew bootRun` | starts PostgreSQL, Keycloak and Mailpit in Docker, then the application on http://localhost:8080 |
+| `./gradlew bootRun` | starts PostgreSQL, Keycloak and Mailpit in Docker, then the application on <http://localhost:8080> |
+| `./gradlew bootBuildImage` | builds the container image with Cloud Native Buildpacks (needs Docker); CI publishes it as `ghcr.io/moonhowl-dev/selenly-backend` |
 
 The HTML test report is written to `build/reports/tests/test/index.html`. In WSL, open it with `explorer.exe build/reports/tests/test`.
 
 `bootRun` needs a running Docker. It starts the services from [`../infra/compose.dev.yml`](../infra/compose.dev.yml), connects to that PostgreSQL by itself, applies the migrations, and stops the services when you stop the application with `Ctrl+C`. Addresses, logins and Docker commands: [infra/README.md](../infra/README.md).
 
-At this stage the application has no endpoints, so http://localhost:8080 answers with a 404 page.
+At this stage the application has no endpoints, so <http://localhost:8080> answers with a 404 page.
 
 ## Database
 

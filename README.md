@@ -84,7 +84,7 @@ To try the production setup on your computer (container images, Keycloak in prod
 - Every change goes through a pull request linked to an issue (`Closes #12` in the description; the [template](.github/pull_request_template.md) has a place for it).
 - The pull request title follows [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `build:` and so on). Pull requests are squash-merged, so the title becomes the commit message on `main`.
 - Formatting and linting are automatic: a Git hook ([`lefthook.yml`](lefthook.yml)) formats the staged files before every commit.
-- [CI](.github/workflows/ci.yml) runs on every pull request: `./gradlew check` in `backend/` (job **Backend**) and lint, typecheck, tests and build in `frontend/` (job **Frontend**).
+- [CI](.github/workflows/ci.yml) runs on every pull request: `./gradlew check` in `backend/` (job **Backend**) and lint, typecheck, tests and build in `frontend/` (job **Frontend**). After a merge to `main`, and every Monday, the job **Images** also builds both container images and publishes them to [GitHub Container Registry](https://github.com/orgs/Moonhowl-Dev/packages?repo_name=selenly); its summary shows the tag to deploy.
 - [CodeRabbit](https://coderabbit.ai) reviews every pull request ([`.coderabbit.yaml`](.coderabbit.yaml)). Answer each comment with a fix or a reason, then resolve the thread.
 - `main` is protected by the ruleset in [`.github/rulesets/main.json`](.github/rulesets/main.json): no direct pushes or force pushes, and a pull request can be merged only when both CI jobs pass and all review conversations are resolved.
 - Architecture decisions are recorded in [docs/adr](docs/adr).

@@ -10,7 +10,7 @@ This file is read by Claude Code at the start of every session and by CodeRabbit
 - `frontend/`: React 19, TypeScript, Vite, TanStack Router and Query, Tailwind CSS v4, shadcn/ui. Rules: [frontend/CLAUDE.md](frontend/CLAUDE.md).
 - `infra/`: Docker Compose for local development (PostgreSQL, Keycloak, Mailpit) and the production stack (`compose.prod.yml`, `Caddyfile`; try it locally with `./scripts/prod-local.sh`).
 - `docs/adr/`: architecture decision records. `docs/onboarding/`: environment setup.
-- `.github/`: CI workflow and the `main` branch ruleset.
+- `.github/`: the CI workflow (checks on every pull request; after a merge, the container images published to GHCR), the `main` branch ruleset and the Renovate config.
 
 ## Commands
 

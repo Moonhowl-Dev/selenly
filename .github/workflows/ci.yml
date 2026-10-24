@@ -1,5 +1,7 @@
 # Checks every pull request and every push to main with the same commands you run locally.
-# The ruleset in .github/rulesets/main.json requires both jobs to pass before a merge.
+# The ruleset in .github/rulesets/main.json requires Backend and Frontend to pass before a merge.
+# After a merge to main, Images builds both container images and publishes them to GitHub
+# Container Registry (ghcr.io), the versions a server runs (infra/compose.prod.yml).
 #
 # Every action is pinned to a full commit SHA (a tag can be moved to other code, a SHA cannot).
 # The comment after the SHA says which release it is.
@@ -9,6 +11,13 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Every Monday at 04:23 UTC: test main again and rebuild the images, so new base
+  # images and JRE patches reach them even in a week without code changes.
+  # GitHub pauses scheduled runs in a repository without activity for 60 days.
+  schedule:
+    - cron: "23 4 * * 1"
+  # The "Run workflow" button on the Actions tab, e.g. to rebuild the images now.
+  workflow_dispatch:
 
 # The token of these jobs can only read the repository.
 permissions:
@@ -93,3 +102,109 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  images:
+    name: Images
+    # Only for code that is on main and has just passed both checks.
+    needs: [backend, frontend]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # This job alone may publish packages; the token still only reads the code.
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io/moonhowl-dev
+    env:
+      REGISTRY: ghcr.io/moonhowl-dev
+      SOURCE_URL: https://github.com/Moonhowl-Dev/selenly
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java (version from .sdkmanrc)
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version-file: .sdkmanrc
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - name: Set up pnpm (version from packageManager in package.json)
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: frontend/package.json
+
+      # No dependency cache in this job: what we publish is built from a clean install.
+      - name: Set up Node (version from .node-version)
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      # One tag for both images, e.g. 20261024-ecf1eaa: the date of the build and the commit.
+      # A rebuild of the same commit on another day gets a new tag, so a tag never changes
+      # its content. This value is IMAGE_TAG in infra/.env on the server.
+      - name: Choose the image tag
+        id: tag
+        run: echo "value=$(date -u +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      # Cloud Native Buildpacks, the same as ./scripts/prod-local.sh, plus image labels
+      # that link the package to this repository and record the commit.
+      - name: Build the backend image
+        working-directory: backend
+        env:
+          TAG: ${{ steps.tag.outputs.value }}
+        run: >-
+          ./gradlew bootBuildImage
+          --imageName="$REGISTRY/selenly-backend:$TAG"
+          --environment BP_OCI_SOURCE="$SOURCE_URL"
+          --environment BP_OCI_REVISION="$GITHUB_SHA"
+          --environment BP_OCI_LICENSES=MIT
+
+      - name: Build the frontend
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Build the web image
+        env:
+          TAG: ${{ steps.tag.outputs.value }}
+        run: >-
+          docker build
+          --file infra/web.Dockerfile
+          --label org.opencontainers.image.source="$SOURCE_URL"
+          --label org.opencontainers.image.revision="$GITHUB_SHA"
+          --label org.opencontainers.image.licenses=MIT
+          --tag "$REGISTRY/selenly-web:$TAG"
+          .
+
+      # The job's own short-lived token; it expires when the job ends.
+      - name: Log in to GitHub Container Registry
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - name: Push the images
+        env:
+          TAG: ${{ steps.tag.outputs.value }}
+        run: |
+          docker push "$REGISTRY/selenly-backend:$TAG"
+          docker push "$REGISTRY/selenly-web:$TAG"
+
+      - name: Log out
+        if: always()
+        run: docker logout ghcr.io
+
+      - name: Summary
+        env:
+          TAG: ${{ steps.tag.outputs.value }}
+        run: |
+          {
+            echo "### Images"
+            echo ""
+            echo "- \`$REGISTRY/selenly-backend:$TAG\`"
+            echo "- \`$REGISTRY/selenly-web:$TAG\`"
+            echo ""
+            echo "To run this version on a server: \`IMAGE_TAG=$TAG\` in \`infra/.env\`."
+          } >> "$GITHUB_STEP_SUMMARY"
