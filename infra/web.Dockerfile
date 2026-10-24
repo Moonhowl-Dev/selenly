@@ -1,6 +1,6 @@
 # The "web" image: Caddy with the built frontend and the Caddyfile.
 # Build context is the repository root, and frontend/dist must exist first
-# (`pnpm build` in frontend/). ./scripts/prod-local.sh does both; CI will too (#12).
+# (`pnpm build` in frontend/). ./scripts/prod-local.sh does both, and so does the Images job in CI.
 #
 #   docker build -f infra/web.Dockerfile -t ghcr.io/moonhowl-dev/selenly-web:local .
 #
