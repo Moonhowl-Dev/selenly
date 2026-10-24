@@ -141,9 +141,10 @@ jobs:
         with:
           node-version-file: .node-version
 
-      # One tag for both images, e.g. 20261024-ecf1eaa: the date of the build and the commit.
-      # A rebuild of the same commit on another day gets a new tag, so a tag never changes
-      # its content. This value is IMAGE_TAG in infra/.env on the server.
+      # One tag for both images: build date, commit, run ID and attempt, for example
+      # 20261024-ecf1eaa-18734567890-1. Every build gets a new tag, even a re-run of the
+      # same commit, so a tag never changes its content; the run ID leads to the run
+      # that built it (Actions tab). This value is IMAGE_TAG in infra/.env on the server.
       - name: Choose the image tag
         id: tag
         run: echo "value=$(date -u +%Y%m%d)-${GITHUB_SHA::7}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"

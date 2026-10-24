@@ -100,7 +100,7 @@ After every merge to `main` and every Monday, the **Images** job of [CI](../.git
 | `ghcr.io/moonhowl-dev/selenly-backend` | `./gradlew bootBuildImage` in `backend/` |
 | `ghcr.io/moonhowl-dev/selenly-web` | `pnpm build` in `frontend/`, then [`web.Dockerfile`](web.Dockerfile) |
 
-Both get the same tag, made of the build date and the commit: `20261024-ecf1eaa`. The tag is `IMAGE_TAG` in `infra/.env`; the job's summary on the Actions tab shows it after each run. A weekly rebuild of the same commit gets a new tag, so a tag always points to the same image, and an older tag is a ready rollback.
+Both get the same tag: the build date, the commit, and the ID and attempt of the CI run, for example `20261024-ecf1eaa-18734567890-1`. The tag is `IMAGE_TAG` in `infra/.env`; the job's summary on the Actions tab shows it after each run. Every build gets a new tag, even a re-run or the weekly rebuild of the same commit, so a tag always points to the same image, and an older tag is a ready rollback.
 
 New packages on GitHub are private. Once, after the first run, make both public so a server can pull them without a token: **Packages** on the organization page → the package → **Package settings** → **Change visibility** → **Public**.
 
