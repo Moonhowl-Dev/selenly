@@ -100,10 +100,14 @@ gh api --method PUT "repos/Moonhowl-Dev/selenly/rulesets/$id" --input .github/ru
 [Renovate](https://docs.renovatebot.com) keeps the dependencies up to date. Its settings, with comments: [`.github/renovate.json5`](.github/renovate.json5).
 
 - On Mondays it opens pull requests for new versions of npm packages, Gradle plugins and libraries, the Gradle wrapper, Docker images, GitHub Actions, Java (`.sdkmanrc`), Node (`.node-version`) and the MCP servers in `.mcp.json`.
-- A version is suggested only when it is at least 3 days old, so a malicious release has time to be found and removed. Security fixes come at once, outside the schedule.
+- A new version is suggested only when it is at least 3 days old, so a malicious release has time to be found and removed. The exceptions:
+  - security fixes come at once, outside the schedule;
+  - Keycloak and Java come without the wait, because their registries publish no release dates: read their release notes before merging;
+  - the monthly refresh of `pnpm-lock.yaml` is checked by pnpm's own 1-day rule instead.
 - Related updates come together: one PR for all minor and patch updates of the frontend, one for GitHub Actions, one for the PostgreSQL image, and one per group of related backend libraries (for example Spring Boot).
 - Major versions wait in the **Dependency Dashboard** issue. Tick one there to get its PR.
-- Review a Renovate PR like any other: read the release notes in its description, wait for green CI, answer CodeRabbit, then squash-merge. If an update breaks the build, fix it on the PR branch or close the PR; Renovate then does not suggest that version again.
+- Review a Renovate PR like any other: read the release notes in its description, wait for green CI, answer CodeRabbit, then squash-merge.
+- If an update breaks the build, fix the code on the PR branch. Closing a PR for one package skips that version (for a major update, that whole major version). Closing a grouped PR does not: Renovate opens it again. To hold back one package in a group, add a rule with `allowedVersions` to `.github/renovate.json5`, and the group PR is rebuilt without it.
 - After a Java or Node update is merged, run `sdk env install` or `fnm use --install-if-missing` in the repository folder.
 
 What Renovate did and why: the Dependency Dashboard issue, or the logs at [developer.mend.io](https://developer.mend.io).
