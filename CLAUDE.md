@@ -8,7 +8,7 @@ This file is read by Claude Code at the start of every session and by CodeRabbit
 
 - `backend/`: Spring Boot 4.1 on Java 25, Spring Modulith, PostgreSQL 18, Flyway. Rules: [backend/CLAUDE.md](backend/CLAUDE.md).
 - `frontend/`: React 19, TypeScript, Vite, TanStack Router and Query, Tailwind CSS v4, shadcn/ui. Rules: [frontend/CLAUDE.md](frontend/CLAUDE.md).
-- `infra/`: Docker Compose for local development (PostgreSQL, Keycloak, Mailpit).
+- `infra/`: Docker Compose for local development (PostgreSQL, Keycloak, Mailpit) and the production stack (`compose.prod.yml`, `Caddyfile`; try it locally with `./scripts/prod-local.sh`).
 - `docs/adr/`: architecture decision records. `docs/onboarding/`: environment setup.
 - `.github/`: CI workflow and the `main` branch ruleset.
 
@@ -33,7 +33,7 @@ Run the application: `./gradlew bootRun` in `backend/` (also starts the Docker s
 - Never edit a Flyway migration that is already on `main`; add a new one.
 - Never edit generated files by hand: `frontend/src/app/routeTree.gen.ts`, and later `frontend/src/api/` (orval).
 - Language: code, comments, documentation, commits and pull requests in English. Text that users see in the app is in Polish.
-- No secrets in the repository: `.env` files are ignored by Git, and passwords in `infra/compose.dev.yml` are public development values only.
+- No secrets in the repository: `.env` files are ignored by Git. Passwords in `infra/compose.dev.yml` and `infra/prod-local.env` are public development values; a server gets its own `infra/.env`.
 - When you change how something is set up or run, update the README of that folder in the same change.
 - This stack is newer than most training data (Spring Boot 4, Spring Modulith 2, React 19, Tailwind CSS v4, TypeScript 6, ESLint flat config). Check the current API in the documentation (the `context7` MCP server) instead of relying on memory, and follow the patterns already in this repository.
 

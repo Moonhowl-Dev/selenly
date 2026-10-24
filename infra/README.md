@@ -8,8 +8,12 @@ Docker Compose files and the configuration of the services the application needs
 | [`postgres/init/`](postgres/init/) | SQL run when the development database is created: the `readonly` role | ready |
 | [`dbhub.toml`](dbhub.toml) | the database MCP server for coding agents ([docs/ai-tools.md](../docs/ai-tools.md)) | ready |
 | `keycloak/realm.json` | Keycloak realm, OIDC client and test accounts | M1 |
-| `compose.prod.yml` | application, PostgreSQL, Keycloak and Caddy on the server | [#11](https://github.com/Moonhowl-Dev/selenly/issues/11) |
-| `Caddyfile` | HTTPS, the built frontend, `/api` to the backend, `auth.` subdomain to Keycloak | [#11](https://github.com/Moonhowl-Dev/selenly/issues/11) |
+| [`compose.prod.yml`](compose.prod.yml) | the production stack: Caddy, backend, Keycloak and PostgreSQL | ready |
+| [`Caddyfile`](Caddyfile) | HTTPS, the built frontend, `/api` and sign-in paths to the backend, the `auth.` subdomain to Keycloak | ready |
+| [`web.Dockerfile`](web.Dockerfile) | the `web` image: Caddy with the built frontend and the Caddyfile | ready |
+| [`postgres/prod-init/`](postgres/prod-init/) | run when the production database is created: Keycloak's own database and login | ready |
+| [`.env.example`](.env.example) | the variables `compose.prod.yml` needs on a server (copied to `.env`) | ready |
+| [`compose.prod.local.yml`](compose.prod.local.yml), [`prod-local.env`](prod-local.env) | changes and values for running the production stack on your computer | ready |
 
 Secrets never go into this folder: on the server they live in a `.env` file, locally in `.env` files ignored by Git.
 
@@ -44,10 +48,58 @@ Run them from the repository root.
 | `docker compose -f infra/compose.dev.yml down` | removes the containers; the database stays in a volume, Keycloak starts clean |
 | `docker compose -f infra/compose.dev.yml down -v` | removes everything, including the database (a full reset) |
 
+## Production stack locally
+
+The production stack runs the same way as on a server: the backend as a container image, Keycloak in production mode, the built frontend behind Caddy, and HTTPS everywhere. Trying it locally shows problems that `bootRun` and `pnpm dev` never show: a missing environment variable, a broken image, a redirect to `http://`, a stack that does not fit into 4 GB.
+
+[`scripts/prod-local.sh`](../scripts/prod-local.sh) builds both images from your working copy and starts the stack. Docker must be running, and ports 80 and 443 on your computer must be free.
+
+```bash
+./scripts/prod-local.sh
+```
+
+The first run takes several minutes: `bootBuildImage` downloads the buildpacks and a JRE, and Keycloak prepares its database. Then:
+
+| Address | What you see |
+|---|---|
+| <https://selenly.localhost> | the application |
+| <https://selenly.localhost/api/anything> | a 404 from Spring Boot, which proves Caddy forwards `/api` to the backend |
+| <https://auth.selenly.localhost> | Keycloak; the admin console logs in with `admin` / `admin` |
+
+Browsers send every `*.localhost` name to your own computer, and Caddy gives such names certificates from its own local certificate authority. The browser does not know that authority yet and shows a warning. You can continue past it, or trust the authority once (needed later for signing in, M1):
+
+1. Copy the authority's certificate out of the container into your home folder and open that folder in Windows Explorer:
+
+   ```bash
+   ./scripts/prod-local.sh cp web:/data/caddy/pki/authorities/local/root.crt ~/caddy-local-root.crt
+   explorer.exe ~
+   ```
+
+2. Double-click `caddy-local-root.crt` and choose **Install Certificate → Current User → Place all certificates in the following store → Trusted Root Certification Authorities**, then confirm the security warning.
+3. Restart the browser. Remove the certificate again (`certmgr.msc`, the same store) when you no longer need it; `down -v` creates a new authority, which has to be trusted again.
+
+| Command | What it does |
+|---|---|
+| `./scripts/prod-local.sh` | rebuilds the images from your current code and updates the running stack |
+| `./scripts/prod-local.sh ps` | containers and their health |
+| `./scripts/prod-local.sh logs` | follows the logs of all services (`logs keycloak` for one) |
+| `docker stats --no-stream` | memory use of each container against its limit |
+| `./scripts/prod-local.sh down` | stops and removes the containers; the data stays in volumes |
+| `./scripts/prod-local.sh down -v` | removes the data too, including Caddy's local authority |
+
+The local stack is a separate Compose project (`selenly-prod-local`), so it can run next to `compose.dev.yml` without touching its data. Its passwords in [`prod-local.env`](prod-local.env) are public development values.
+
+On a server the stack uses `compose.prod.yml` alone, with the images from GitHub Container Registry and an `infra/.env` made from [`.env.example`](.env.example) (#10, #12).
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `prod-local.sh`: `Bind for 127.0.0.1:443 failed: port is already allocated` | another program or container uses port 80 or 443 | `docker ps` for containers; in PowerShell `netstat -ano \| findstr :443` shows the process ID of other programs |
+| `prod-local.sh`: `bootBuildImage` fails to connect to Docker | Docker Desktop is closed | start Docker Desktop and run the script again |
+| `pull access denied for selenly-backend` | `docker compose` was run without the script, so the backend image was never built | use `./scripts/prod-local.sh` |
+| The browser cannot find `selenly.localhost` | the browser does not send `*.localhost` to your computer | use a current Chrome, Edge or Firefox, or add `127.0.0.1 selenly.localhost auth.selenly.localhost` to `C:\Windows\System32\drivers\etc\hosts` |
+| `prod-local.sh` waits and then reports Keycloak as unhealthy | Keycloak's first start in production mode takes longer, or its database login failed | `./scripts/prod-local.sh logs keycloak` |
 | `bootRun` fails with a message that Docker is not running | Docker Desktop is closed, or Docker Engine is stopped | start Docker Desktop (or `sudo systemctl start docker`) |
 | `port is already allocated` or `address already in use` | another container or program uses the same port, e.g. a Postgres from another project | `docker ps` to find it, `docker stop <name>`; or change the left-hand port in `compose.dev.yml` |
 | The first `bootRun` seems stuck | the images are being downloaded (several hundred MB) | wait, or run the `pull` command above first to see the progress |

@@ -1,0 +1,5 @@
+# Docker reads this file (named after web.Dockerfile) instead of a .dockerignore.
+# Send nothing to the build except the two inputs the image needs.
+*
+!infra/Caddyfile
+!frontend/dist

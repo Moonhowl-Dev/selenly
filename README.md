@@ -63,6 +63,8 @@ cd frontend && pnpm install && pnpm dev        # the web app on http://localhost
 
 Open <http://localhost:5173>. Details: [backend/README.md](backend/README.md), [frontend/README.md](frontend/README.md), [infra/README.md](infra/README.md).
 
+To try the production setup on your computer (container images, Keycloak in production mode, HTTPS through Caddy at <https://selenly.localhost>), run `./scripts/prod-local.sh`; see [infra/README.md](infra/README.md#production-stack-locally).
+
 ## Roadmap
 
 | Milestone | Scope |

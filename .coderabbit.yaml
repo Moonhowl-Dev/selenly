@@ -83,8 +83,12 @@ reviews:
           ruleset blocks every pull request.
     - path: "infra/**"
       instructions: |
-        - Development services bind ports to `127.0.0.1` and use pinned image
-          versions; passwords here are public development values, never real ones.
+        - Image versions are pinned. In compose.dev.yml and compose.prod.local.yml
+          ports bind to `127.0.0.1`; in compose.prod.yml only the `web` service
+          (Caddy) publishes ports, and every other service stays internal.
+        - Passwords in compose.dev.yml and prod-local.env are public development
+          values. compose.prod.yml takes secrets only from variables (`infra/.env`
+          on the server), never as literal values.
     - path: "**/*.md"
       instructions: |
         - Check that commands, file paths and links match the repository.
