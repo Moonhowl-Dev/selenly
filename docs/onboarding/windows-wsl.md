@@ -304,4 +304,4 @@ Versions are pinned in the repository, so everyone works with the same ones:
 - **Java:** the `java=` line in [`.sdkmanrc`](../../.sdkmanrc). Available versions: `sdk list java | grep -- -tem`. After a change, everyone runs `sdk env install` in the repository folder.
 - **Node:** the number in [`.node-version`](../../.node-version). fnm switches automatically when you enter the folder; if the version is missing, `fnm use --install-if-missing`.
 
-Change versions in a separate PR and run `./scripts/doctor.sh` before and after.
+Renovate proposes new versions of both in pull requests (see "Dependency updates" in the [README](../../README.md#dependency-updates)). After such a PR is merged, run `sdk env install` or `fnm use --install-if-missing`, then `./scripts/doctor.sh`.

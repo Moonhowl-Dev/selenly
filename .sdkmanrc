@@ -1,4 +1,4 @@
 # Java version for this project (SDKMAN).
 # In the repository folder: `sdk env install` installs it, `sdk env` switches to it.
-# To change the version, edit this line in a separate PR (see docs/onboarding/windows-wsl.md).
+# Renovate opens a PR when a new Java 25 release is out (see .github/renovate.json5).
 java=25.0.4-tem
