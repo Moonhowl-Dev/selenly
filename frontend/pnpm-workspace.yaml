@@ -1,5 +1,10 @@
 # pnpm settings for the frontend.
-#
+
+# Skip versions published less than a day ago (1440 minutes), also for indirect
+# dependencies. It is pnpm's default since v11; written here so the rule is visible.
+# Renovate waits 3 days before it suggests an update (.github/renovate.json5).
+minimumReleaseAge: 1440
+
 # Dependencies may not run install scripts or install "agent skills" (instructions for
 # AI coding agents) unless listed here. The project's own skills live in .claude/skills
 # and are reviewed like code; git hooks are installed by `pnpm prepare` (lefthook install).

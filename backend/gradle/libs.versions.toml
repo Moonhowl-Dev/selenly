@@ -18,6 +18,11 @@ nullaway = "0.14.3"
 [libraries]
 error-prone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "error-prone" }
 nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
+# Not used as dependencies: build.gradle.kts reads only their versions (the Modulith BOM,
+# Spotless's formatter). These entries tell Renovate which artifact each version belongs to,
+# so it can update them.
+spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
+palantir-java-format = { module = "com.palantir.javaformat:palantir-java-format", version.ref = "palantir-java-format" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

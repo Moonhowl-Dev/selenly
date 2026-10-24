@@ -1,0 +1,129 @@
+// Renovate opens pull requests that update our dependencies: https://docs.renovatebot.com
+// It runs as the Mend Renovate GitHub App and reads this file from the default branch.
+// How to work with its pull requests: "Dependency updates" in README.md.
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    // The Dependency Dashboard issue, one PR per monorepo (Spring Boot, TanStack, Vitest, …)
+    // and the other defaults recommended by the Renovate maintainers.
+    'config:recommended',
+    // A GitHub Action added later is pinned to a commit SHA too, like those in ci.yml.
+    'helpers:pinGitHubActionDigests',
+    // When Renovate renames one of the options below, it opens a PR that updates this file.
+    ':configMigration',
+    // Once a month, pnpm-lock.yaml is refreshed so indirect dependencies get updates as well.
+    ':maintainLockFilesMonthly',
+  ],
+
+  // Commit messages and PR titles in our Conventional Commits style:
+  // "build(deps): update …" for dependencies, "ci(deps): update …" for GitHub Actions (below).
+  ignorePresets: [':semanticPrefixFixDepsChoreOthers'],
+  semanticCommits: 'enabled',
+  semanticCommitType: 'build',
+  semanticCommitScope: 'deps',
+  labels: ['dependencies'],
+
+  // New PRs only on Mondays, so updates arrive once a week and can be reviewed together.
+  // Security fixes ignore the schedule and come at once.
+  timezone: 'Europe/Warsaw',
+  schedule: ['* * * * 1'],
+  prConcurrentLimit: 5,
+
+  // Security fixes for known vulnerabilities, from the OSV database (osv.dev).
+  osvVulnerabilityAlerts: true,
+
+  // The default would skip every "test" folder, but TestcontainersConfiguration.java
+  // contains an image version that has to stay in sync with infra/compose.dev.yml.
+  ignorePaths: ['**/node_modules/**'],
+
+  packageRules: [
+    {
+      description: 'Supply-chain safety: suggest a release only when it is 3 days old. Malicious versions are often found and removed by then, and npm allows unpublishing for 72 hours. For indirect dependencies, pnpm applies its own 1-day rule (minimumReleaseAge in frontend/pnpm-workspace.yaml).',
+      matchUpdateTypes: ['major', 'minor', 'patch', 'digest'],
+      minimumReleaseAge: '3 days',
+      internalChecksFilter: 'strict',
+    },
+    {
+      description: 'Quay.io (Keycloak) and the Adoptium API (Java) publish no release dates, so Renovate cannot wait 3 days. Read the release notes before merging these.',
+      matchPackageNames: ['quay.io/keycloak/keycloak'],
+      minimumReleaseAgeBehaviour: 'timestamp-optional',
+    },
+    {
+      matchDatasources: ['java-version'],
+      minimumReleaseAgeBehaviour: 'timestamp-optional',
+    },
+    {
+      description: 'A major version is a decision, not a routine update: tick it in the Dependency Dashboard to get the PR.',
+      matchUpdateTypes: ['major'],
+      dependencyDashboardApproval: true,
+    },
+    {
+      description: 'GitHub Actions: commit type "ci", and all minor and patch updates in one PR.',
+      matchManagers: ['github-actions'],
+      semanticCommitType: 'ci',
+    },
+    {
+      matchManagers: ['github-actions'],
+      matchUpdateTypes: ['minor', 'patch', 'digest'],
+      groupName: 'GitHub Actions',
+    },
+    {
+      description: 'Frontend: all minor and patch updates of npm packages in one PR. Grouping all of them keeps packages that must match (TanStack Router and its Vite plugin, React and its types) together.',
+      matchManagers: ['npm'],
+      matchUpdateTypes: ['minor', 'patch'],
+      groupName: 'frontend non-major dependencies',
+    },
+    {
+      description: 'The PostgreSQL image in compose.dev.yml and in Testcontainers is updated in one PR.',
+      matchDatasources: ['docker'],
+      matchPackageNames: ['postgres'],
+      groupName: 'PostgreSQL',
+    },
+    {
+      matchDatasources: ['docker'],
+      matchPackageNames: ['postgres'],
+      matchUpdateTypes: ['major'],
+      prBodyNotes: ['⚠️ A new major PostgreSQL version cannot read the data of the old one. Locally: `docker compose -f infra/compose.dev.yml down -v` deletes the development database. On a server the data has to be migrated (dump and restore, or pg_upgrade).'],
+    },
+    {
+      description: 'Stay on Java 25, the current LTS release, until the next LTS.',
+      matchDatasources: ['java-version'],
+      allowedVersions: '<26',
+    },
+    {
+      description: 'MCP servers for coding agents: .mcp.json and the setup command in docs/ai-tools.md in one PR.',
+      matchFileNames: ['.mcp.json', 'docs/ai-tools.md'],
+      groupName: 'MCP servers',
+      prBodyNotes: ['⚠️ After merging a new `@playwright/mcp`, everyone installs its browser again: the `install-browser` command from docs/ai-tools.md, with the new version.'],
+    },
+  ],
+
+  // Versions in files that Renovate does not know by itself.
+  customManagers: [
+    {
+      customType: 'regex',
+      description: 'Java (Eclipse Temurin) in .sdkmanrc, used by SDKMAN and by CI',
+      managerFilePatterns: ['/(^|/)\\.sdkmanrc$/'],
+      matchStrings: ['java=(?<currentValue>\\d+\\.\\d+\\.\\d+)-tem'],
+      depNameTemplate: 'java',
+      packageNameTemplate: 'java-jdk',
+      datasourceTemplate: 'java-version',
+      // Adoptium reports versions like 25.0.5+11.0.LTS; SDKMAN needs 25.0.5.
+      extractVersionTemplate: '^(?<version>\\d+\\.\\d+\\.\\d+)',
+    },
+    {
+      customType: 'regex',
+      description: 'Docker images of Testcontainers in backend tests',
+      managerFilePatterns: ['/^backend/src/test/java/.+\\.java$/'],
+      matchStrings: ['DockerImageName\\.parse\\("(?<depName>[a-z0-9./-]+):(?<currentValue>[^"@]+)"\\)'],
+      datasourceTemplate: 'docker',
+    },
+    {
+      customType: 'regex',
+      description: 'npm packages of the MCP servers, run with pnpm dlx',
+      managerFilePatterns: ['/^\\.mcp\\.json$/', '/^docs/ai-tools\\.md$/'],
+      matchStrings: ['(?<depName>@[a-z0-9-]+/[a-z0-9.-]+)@(?<currentValue>\\d+\\.\\d+\\.\\d+)'],
+      datasourceTemplate: 'npm',
+    },
+  ],
+}

@@ -26,9 +26,9 @@ Run the application: `./gradlew bootRun` in `backend/` (also starts the Docker s
 ## Rules
 
 - Never work on `main`. Changes reach `main` only as squash-merged pull requests with green CI and resolved review threads.
-- Commit messages and pull request titles follow Conventional Commits: `<type>: <description>`, type one of `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`; the description is lowercase and imperative. The PR title becomes the commit on `main`.
+- Commit messages and pull request titles follow Conventional Commits: `<type>: <description>` or `<type>(<scope>): <description>`, type one of `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`; the description starts with a lowercase letter and is imperative. The PR title becomes the commit on `main`. Renovate uses `build(deps):` and `ci(deps):`.
 - Do not commit, push or open a pull request unless asked to.
-- Do not add or upgrade a dependency without asking first. Versions live in `backend/gradle/libs.versions.toml` and `frontend/package.json`.
+- Do not add or upgrade a dependency without asking first. Versions live in `backend/gradle/libs.versions.toml` and `frontend/package.json`; routine updates come from Renovate (`.github/renovate.json5`).
 - Every change in logic comes with a test. Never delete, skip or weaken an existing test to make a build pass; if a test looks wrong, say so.
 - Never edit a Flyway migration that is already on `main`; add a new one.
 - Never edit generated files by hand: `frontend/src/app/routeTree.gen.ts`, and later `frontend/src/api/` (orval).
