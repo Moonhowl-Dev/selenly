@@ -146,7 +146,7 @@ jobs:
       # its content. This value is IMAGE_TAG in infra/.env on the server.
       - name: Choose the image tag
         id: tag
-        run: echo "value=$(date -u +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+        run: echo "value=$(date -u +%Y%m%d)-${GITHUB_SHA::7}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
 
       # Cloud Native Buildpacks, the same as ./scripts/prod-local.sh, plus image labels
       # that link the package to this repository and record the commit.
