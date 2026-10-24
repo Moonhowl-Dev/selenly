@@ -19,7 +19,7 @@ Run them in this folder (`backend/`).
 | `./gradlew spotlessApply` | formats all Java code (the Git hook does it for staged files) |
 | `./gradlew test --tests 'dev.moonhowl.selenly.ModularityTests'` | runs a single test class |
 | `./gradlew bootRun` | starts PostgreSQL, Keycloak and Mailpit in Docker, then the application on <http://localhost:8080> |
-| `./gradlew bootBuildImage` | builds the container image with Cloud Native Buildpacks (needs Docker); CI publishes it as `ghcr.io/moonhowl-dev/selenly-backend` |
+| `./gradlew bootBuildImage` | builds the container image for `linux/amd64` with Cloud Native Buildpacks (needs Docker), using the builder version pinned in `build.gradle.kts`; CI publishes it as `ghcr.io/moonhowl-dev/selenly-backend` |
 
 The HTML test report is written to `build/reports/tests/test/index.html`. In WSL, open it with `explorer.exe build/reports/tests/test`.
 
