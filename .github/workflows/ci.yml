@@ -107,7 +107,7 @@ jobs:
     name: Images
     # Only for code that is on main and has just passed both checks.
     needs: [backend, frontend]
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # This job alone may publish packages; the token still only reads the code.
